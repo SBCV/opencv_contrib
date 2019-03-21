@@ -673,7 +673,7 @@ FromFileMotionReader::FromFileMotionReader(const String &path)
 }
 
 
-Mat FromFileMotionReader::estimate(const Mat &/*frame0*/, const Mat &/*frame1*/, bool *ok)
+Mat FromFileMotionReader::estimate(const Mat &/*frame0*/, const Mat &/*frame1*/, bool *ok, InputArray /*mask*/)
 {
     Mat_<float> M(3, 3);
     bool ok_;
@@ -693,10 +693,10 @@ ToFileMotionWriter::ToFileMotionWriter(const String &path, Ptr<ImageMotionEstima
 }
 
 
-Mat ToFileMotionWriter::estimate(const Mat &frame0, const Mat &frame1, bool *ok)
+Mat ToFileMotionWriter::estimate(const Mat &frame0, const Mat &frame1, bool *ok, InputArray mask)
 {
     bool ok_;
-    Mat_<float> M = motionEstimator_->estimate(frame0, frame1, &ok_);
+    Mat_<float> M = motionEstimator_->estimate(frame0, frame1, &ok_, mask);
     file_ << M(0,0) << " " << M(0,1) << " " << M(0,2) << " "
           << M(1,0) << " " << M(1,1) << " " << M(1,2) << " "
           << M(2,0) << " " << M(2,1) << " " << M(2,2) << " " << ok_ << std::endl;
@@ -714,18 +714,18 @@ KeypointBasedMotionEstimator::KeypointBasedMotionEstimator(Ptr<MotionEstimatorBa
 }
 
 
-Mat KeypointBasedMotionEstimator::estimate(const Mat &frame0, const Mat &frame1, bool *ok)
+Mat KeypointBasedMotionEstimator::estimate(const Mat &frame0, const Mat &frame1, bool *ok, InputArray mask)
 {
     InputArray image0 = frame0;
     InputArray image1 = frame1;
 
-    return estimate(image0, image1, ok);
+    return estimate(image0, image1, ok, mask);
 }
 
-Mat KeypointBasedMotionEstimator::estimate(InputArray frame0, InputArray frame1, bool *ok)
+Mat KeypointBasedMotionEstimator::estimate(InputArray frame0, InputArray frame1, bool *ok, InputArray mask)
 {
     // find keypoints
-    detector_->detect(frame0, keypointsPrev_);
+    detector_->detect(frame0, keypointsPrev_, mask);
     if (keypointsPrev_.empty())
         return Mat::eye(3, 3, CV_32F);
 
@@ -793,15 +793,15 @@ KeypointBasedMotionEstimatorGpu::KeypointBasedMotionEstimatorGpu(Ptr<MotionEstim
 }
 
 
-Mat KeypointBasedMotionEstimatorGpu::estimate(const Mat &frame0, const Mat &frame1, bool *ok)
+Mat KeypointBasedMotionEstimatorGpu::estimate(const Mat &frame0, const Mat &frame1, bool *ok, InputArray mask)
 {
     frame0_.upload(frame0);
     frame1_.upload(frame1);
-    return estimate(frame0_, frame1_, ok);
+    return estimate(frame0_, frame1_, ok, mask);
 }
 
 
-Mat KeypointBasedMotionEstimatorGpu::estimate(const cuda::GpuMat &frame0, const cuda::GpuMat &frame1, bool *ok)
+Mat KeypointBasedMotionEstimatorGpu::estimate(const cuda::GpuMat &frame0, const cuda::GpuMat &frame1, bool *ok, InputArray mask)
 {
     // convert frame to gray if it's color
 
@@ -815,7 +815,7 @@ Mat KeypointBasedMotionEstimatorGpu::estimate(const cuda::GpuMat &frame0, const 
     }
 
     // find keypoints
-    detector_->detect(grayFrame0, pointsPrev_);
+    detector_->detect(grayFrame0, pointsPrev_, mask);
 
     // find correspondences
     optFlowEstimator_.run(frame0, frame1, pointsPrev_, points_, status_);
@@ -853,7 +853,7 @@ Mat KeypointBasedMotionEstimatorGpu::estimate(const cuda::GpuMat &frame0, const 
     }
 
     // estimate motion
-    return motionEstimator_->estimate(hostPointsPrev_, hostPoints_, ok);
+    return motionEstimator_->estimate(hostPointsPrev_, hostPoints_, ok, mask);
 }
 
 #endif // defined(HAVE_OPENCV_CUDAIMGPROC) && defined(HAVE_OPENCV_CUDAOPTFLOW)

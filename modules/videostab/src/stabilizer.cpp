@@ -391,7 +391,16 @@ void TwoPassStabilizer::runPrePassIfNecessary()
         {
             if (frameCount_ > 0)
             {
-                motions_.push_back(motionEstimator_->estimate(prevFrame, frame, &ok));
+                Mat feature_mask = Mat();
+                if (maskSource_) {
+                    Mat mask_frame = maskSource_->nextFrame(); 
+                    if (!mask_frame.empty()) 
+                    {
+                        feature_mask = Mat(mask_frame.size(), CV_8UC1);
+                        cv::cvtColor(mask_frame, feature_mask, cv::COLOR_BGR2GRAY);
+                    }
+                }
+                motions_.push_back(motionEstimator_->estimate(prevFrame, frame, &ok, feature_mask));
 
                 if (doWobbleSuppression_)
                 {

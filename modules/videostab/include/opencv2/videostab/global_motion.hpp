@@ -180,7 +180,7 @@ public:
     virtual void setMotionModel(MotionModel val) { motionModel_ = val; }
     virtual MotionModel motionModel() const { return motionModel_; }
 
-    virtual Mat estimate(const Mat &frame0, const Mat &frame1, bool *ok = 0) = 0;
+    virtual Mat estimate(const Mat &frame0, const Mat &frame1, bool *ok = 0, InputArray mask = noArray()) = 0;
 
 protected:
     ImageMotionEstimatorBase(MotionModel model) { setMotionModel(model); }
@@ -194,7 +194,7 @@ class CV_EXPORTS FromFileMotionReader : public ImageMotionEstimatorBase
 public:
     FromFileMotionReader(const String &path);
 
-    virtual Mat estimate(const Mat &frame0, const Mat &frame1, bool *ok = 0) CV_OVERRIDE;
+    virtual Mat estimate(const Mat &frame0, const Mat &frame1, bool *ok = 0, InputArray mask = noArray()) CV_OVERRIDE;
 
 private:
     std::ifstream file_;
@@ -208,7 +208,7 @@ public:
     virtual void setMotionModel(MotionModel val) CV_OVERRIDE { motionEstimator_->setMotionModel(val); }
     virtual MotionModel motionModel() const CV_OVERRIDE { return motionEstimator_->motionModel(); }
 
-    virtual Mat estimate(const Mat &frame0, const Mat &frame1, bool *ok = 0) CV_OVERRIDE;
+    virtual Mat estimate(const Mat &frame0, const Mat &frame1, bool *ok = 0, InputArray mask = noArray()) CV_OVERRIDE;
 
 private:
     std::ofstream file_;
@@ -235,8 +235,8 @@ public:
     void setOutlierRejector(Ptr<IOutlierRejector> val) { outlierRejector_ = val; }
     Ptr<IOutlierRejector> outlierRejector() const { return outlierRejector_; }
 
-    virtual Mat estimate(const Mat &frame0, const Mat &frame1, bool *ok = 0) CV_OVERRIDE;
-    Mat estimate(InputArray frame0, InputArray frame1, bool *ok = 0);
+    virtual Mat estimate(const Mat &frame0, const Mat &frame1, bool *ok = 0, InputArray mask = noArray()) CV_OVERRIDE;
+    Mat estimate(InputArray frame0, InputArray frame1, bool *ok = 0, InputArray mask = noArray());
 
 private:
     Ptr<MotionEstimatorBase> motionEstimator_;
@@ -263,8 +263,8 @@ public:
     void setOutlierRejector(Ptr<IOutlierRejector> val) { outlierRejector_ = val; }
     Ptr<IOutlierRejector> outlierRejector() const { return outlierRejector_; }
 
-    virtual Mat estimate(const Mat &frame0, const Mat &frame1, bool *ok = 0) CV_OVERRIDE;
-    Mat estimate(const cuda::GpuMat &frame0, const cuda::GpuMat &frame1, bool *ok = 0);
+    virtual Mat estimate(const Mat &frame0, const Mat &frame1, bool *ok = 0, InputArray mask = noArray()) CV_OVERRIDE;
+    Mat estimate(const cuda::GpuMat &frame0, const cuda::GpuMat &frame1, bool *ok = 0, InputArray mask = noArray());
 
 private:
     Ptr<MotionEstimatorBase> motionEstimator_;
